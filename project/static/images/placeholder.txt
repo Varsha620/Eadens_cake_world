@@ -1,0 +1,8 @@
+This directory contains cake images. Please add the following images:
+- chocolate-cake.jpg
+- vanilla-cake.jpg
+- black-forest.jpg
+- red-velvet.jpg
+- truffle.jpg
+- cupcakes.jpg
+- cake-pops.jpg

@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="customize-section">
+    <h1>Customize Your Cake</h1>
+    <form id="customize-form" class="customize-form">
+        <div class="form-group">
+            <label for="cake-size">Cake Size</label>
+            <select name="cake-size" id="cake-size" required>
+                <option value="0.5">0.5 KG</option>
+                <option value="1">1 KG</option>
+                <option value="1.5">1.5 KG</option>
+                <option value="2">2 KG</option>
+                <option value="custom">Custom Size</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="cake-flavor">Cake Flavor</label>
+            <select name="cake-flavor" id="cake-flavor" required>
+                <option value="vanilla">Vanilla</option>
+                <option value="chocolate">Chocolate</option>
+                <option value="red-velvet">Red Velvet</option>
+                <option value="black-forest">Black Forest</option>
+                <option value="butterscotch">Butterscotch</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="frosting">Frosting Type</label>
+            <select name="frosting" id="frosting" required>
+                <option value="buttercream">Buttercream</option>
+                <option value="fondant">Fondant</option>
+                <option value="whipped-cream">Whipped Cream</option>
+                <option value="chocolate-ganache">Chocolate Ganache</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="toppings">Toppings (Multiple)</label>
+            <select name="toppings" id="toppings" multiple>
+                <option value="fruits">Fresh Fruits</option>
+                <option value="nuts">Nuts</option>
+                <option value="chocolate-chips">Chocolate Chips</option>
+                <option value="sprinkles">Sprinkles</option>
+                <option value="edible-flowers">Edible Flowers</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="message">Message on Cake</label>
+            <input type="text" name="message" id="message" placeholder="Happy Birthday, etc.">
+        </div>
+
+        <div class="form-group">
+            <label for="special-instructions">Special Instructions</label>
+            <textarea name="special-instructions" id="special-instructions" rows="4" placeholder="Any specific requirements or allergies..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="reference-photo">Reference Photo (Optional)</label>
+            <input type="file" name="reference-photo" id="reference-photo" accept="image/*">
+            <img id="photo-preview" style="display: none; max-width: 100%; margin-top: 1rem;">
+        </div>
+
+        <div class="form-group">
+            <label for="delivery-date">Delivery Date</label>
+            <input type="date" name="delivery-date" id="delivery-date" required>
+        </div>
+
+        <div class="form-group">
+            <label for="delivery-time">Preferred Delivery Time</label>
+            <select name="delivery-time" id="delivery-time" required>
+                <option value="morning">Morning (9 AM - 12 PM)</option>
+                <option value="afternoon">Afternoon (12 PM - 3 PM)</option>
+                <option value="evening">Evening (3 PM - 6 PM)</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn">Add to Cart</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.customize-section {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.customize-section h1 {
+    text-align: center;
+    color: var(--primary-color);
+    margin-bottom: 2rem;
+}
+
+select[multiple] {
+    height: 100px;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+#photo-preview {
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+input[type="file"] {
+    border: 1px solid #ddd;
+    padding: 0.5rem;
+    border-radius: 5px;
+    width: 100%;
+}
+
+.price-estimate {
+    margin-top: 1rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--accent-color);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('customize-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Calculate estimated price based on selections
+    const size = parseFloat(document.getElementById('cake-size').value);
+    const basePrice = size * 1000; // ₹1000 per kg
+    const frostingPrice = document.getElementById('frosting').value === 'fondant' ? 200 : 0;
+    const toppings = Array.from(document.getElementById('toppings').selectedOptions).length * 100;
+    
+    const totalPrice = basePrice + frostingPrice + toppings;
+    
+    // Add to cart with custom details
+    const customCake = {
+        name: 'Custom Cake',
+        price: totalPrice,
+        details: {
+            size: size + ' KG',
+            flavor: document.getElementById('cake-flavor').value,
+            frosting: document.getElementById('frosting').value,
+            toppings: Array.from(document.getElementById('toppings').selectedOptions).map(opt => opt.value),
+            message: document.getElementById('message').value,
+            instructions: document.getElementById('special-instructions').value,
+            deliveryDate: document.getElementById('delivery-date').value,
+            deliveryTime: document.getElementById('delivery-time').value
+        }
+    };
+    
+    // Add to cart and show notification
+    addToCart('custom', customCake.name, customCake.price, customCake.details);
+    showNotification('Custom cake added to cart!');
+    
+    // Reset form
+    this.reset();
+    document.getElementById('photo-preview').style.display = 'none';
+});
+</script>
+{% endblock %}
