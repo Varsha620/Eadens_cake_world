@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 30 70% 98%;
+    --foreground: 342 75% 17%;
+
+    --card: 30 70% 98%;
+    --card-foreground: 342 75% 17%;
+
+    --popover: 30 70% 98%;
+    --popover-foreground: 342 75% 17%;
+
+    --primary: 342 75% 17%;
+    --primary-foreground: 30 70% 98%;
+
+    --secondary: 350 67% 28%;
+    --secondary-foreground: 30 70% 98%;
+
+    --muted: 342 50% 80%;
+    --muted-foreground: 342 75% 17%;
+
+    --accent: 350 33% 51%;
+    --accent-foreground: 30 70% 98%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 342 30% 80%;
+    --input: 342 30% 80%;
+    --ring: 342 75% 17%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 342 75% 17%;
+    --foreground: 30 70% 98%;
+
+    --card: 342 75% 17%;
+    --card-foreground: 30 70% 98%;
+
+    --popover: 342 75% 17%;
+    --popover-foreground: 30 70% 98%;
+
+    --primary: 30 70% 98%;
+    --primary-foreground: 342 75% 17%;
+
+    --secondary: 342 50% 80%;
+    --secondary-foreground: 342 75% 17%;
+
+    --muted: 350 33% 51%;
+    --muted-foreground: 30 70% 98%;
+
+    --accent: 350 67% 28%;
+    --accent-foreground: 30 70% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 350 33% 51%;
+    --input: 350 33% 51%;
+    --ring: 30 70% 98%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+.cake-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cake-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.carousel-image {
+  height: 500px;
+  object-fit: cover;
+}
+
+@media (max-width: 768px) {
+  .carousel-image {
+    height: 300px;
+  }
+}
+

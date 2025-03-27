@@ -1,0 +1,115 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String
+  role          Role      @default(CUSTOMER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  orders        Order[]
+  reviews       Review[]
+  address       String?
+  phone         String?
+}
+
+enum Role {
+  ADMIN
+  CUSTOMER
+}
+
+model Product {
+  id            String    @id @default(cuid())
+  name          String
+  description   String
+  longDescription String?
+  price         Float
+  category      String
+  image         String
+  sizes         String?   // Stored as JSON string
+  ingredients   String?   // Stored as JSON string
+  allergens     String?   // Stored as JSON string
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  orderItems    OrderItem[]
+}
+
+model Order {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  status        OrderStatus @default(PENDING)
+  deliveryMethod DeliveryMethod
+  address       String?
+  subtotal      Float
+  deliveryFee   Float
+  total         Float
+  items         OrderItem[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  scheduledDate DateTime?
+}
+
+enum OrderStatus {
+  PENDING
+  APPROVED
+  COMPLETED
+  CANCELLED
+}
+
+enum DeliveryMethod {
+  DELIVERY
+  TAKEAWAY
+}
+
+model OrderItem {
+  id            String    @id @default(cuid())
+  orderId       String
+  order         Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId     String?
+  product       Product?  @relation(fields: [productId], references: [id])
+  name          String
+  price         Float
+  quantity      Int
+  type          String    // "standard" or "custom"
+  customOptions String?   // Stored as JSON string
+  image         String?
+}
+
+model CustomCake {
+  id            String    @id @default(cuid())
+  userId        String?
+  flavor        String
+  filling       String
+  frosting      String
+  decoration    String
+  shape         String
+  size          String
+  color         String
+  message       String?
+  specialInstructions String?
+  generatedImage String?
+  price         Float
+  createdAt     DateTime  @default(now())
+}
+
+model Review {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating        Int
+  comment       String
+  createdAt     DateTime  @default(now())
+}
+
