@@ -20,7 +20,6 @@ export async function createToken(userId: string, role: string) {
     .setIssuedAt()
     .setExpirationTime("7d")
     .sign(new TextEncoder().encode(JWT_SECRET))
-
   return token
 }
 
@@ -33,10 +32,35 @@ export async function verifyToken(token: string) {
   }
 }
 
+// Server-side session handling
 export async function getSession() {
-  const cookieStore = cookies()
-  const token = cookieStore.get("token")?.value
+  const token = cookies().get("token")?.value
+  if (!token) return null
 
+  return await verifyToken(token)
+}
+
+// Server-side current user
+export async function getCurrentUser() {
+  const session = await getSession()
+  if (!session?.userId) return null
+
+  return await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      address: true,
+      phone: true,
+    },
+  })
+}
+
+// Middleware auth check
+export async function requireAuth(request: NextRequest) {
+  const token = request.cookies.get("token")?.value
   if (!token) return null
 
   const payload = await verifyToken(token)
@@ -48,52 +72,9 @@ export async function getSession() {
   }
 }
 
-export async function getCurrentUser() {
-  const session = await getSession()
-  if (!session) return null
-
-  const user = await prisma.user.findUnique({
-    where: { id: session.userId },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      address: true,
-      phone: true,
-    },
-  })
-
-  return user
-}
-
-export async function requireAuth(request: NextRequest) {
-  const cookieStore = cookies()
-  const token = cookieStore.get("token")?.value
-
-  if (!token) {
-    return null
-  }
-
-  const payload = await verifyToken(token)
-  if (!payload) {
-    return null
-  }
-
-  return {
-    userId: payload.userId as string,
-    role: payload.role as string,
-  }
-}
-
+// Middleware admin check
 export async function requireAdmin(request: NextRequest) {
   const session = await requireAuth(request)
-  if (!session) return null
-
-  if (session.role !== "ADMIN") {
-    return null
-  }
-
+  if (!session || session.role !== "ADMIN") return null
   return session
 }
-

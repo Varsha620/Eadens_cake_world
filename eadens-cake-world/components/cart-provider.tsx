@@ -143,7 +143,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
         title: "Order Submitted",
         description: "Your order has been sent to the admin for approval",
       })
-
       clearCart()
       return true
     } catch (error) {

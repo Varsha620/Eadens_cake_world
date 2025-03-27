@@ -7,11 +7,13 @@ import { Calendar } from "@/components/ui/calendar"
 import OrdersTable from "@/components/admin/orders-table"
 import ProductsTable from "@/components/admin/products-table"
 import { CakeIcon, DollarSign, ShoppingCart, Users } from "lucide-react"
+import ClientWrapper from "../ClientWrapper"
 
 export default function AdminDashboard() {
   const [date, setDate] = useState<Date | undefined>(new Date())
 
   return (
+  <ClientWrapper>
     <div className="container py-8 md:py-16">
       <h1 className="mb-8 text-3xl font-bold text-primary md:text-4xl">Admin Dashboard</h1>
 
@@ -121,6 +123,7 @@ export default function AdminDashboard() {
         </Card>
       </div>
     </div>
+  </ClientWrapper>
   )
 }
 

@@ -36,11 +36,10 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   try {
     const session = await requireAdmin(request)
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized access" }, { status: 401 })
     }
 
     const data = await request.json()
-
     const order = await prisma.order.update({
       where: { id: params.id },
       data: {
@@ -52,7 +51,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     return NextResponse.json(order)
   } catch (error) {
     console.error("Error updating order:", error)
-    return NextResponse.json({ error: "An error occurred while updating the order" }, { status: 500 })
+    return NextResponse.json({ error: "Failed to update order. Please try again later." }, { status: 500 })
   }
 }
 

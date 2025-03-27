@@ -67,13 +67,20 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
   body {
     @apply bg-background text-foreground;
+    background-color: hsl(var(--background)); /* Directly use CSS variable */
+    color: hsl(var(--foreground)); /* Apply text color */
+    }
+}
+
+
+@layer components {
+  .border-border {
+    border-color: theme("colors.border");
   }
 }
+
 
 .cake-card {
   transition: transform 0.3s ease, box-shadow 0.3s ease;

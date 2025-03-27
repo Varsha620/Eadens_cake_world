@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await requireAdmin(request)
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized access" }, { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -42,11 +42,7 @@ export async function GET(request: NextRequest) {
             email: true,
           },
         },
-        items: {
-          include: {
-            product: true,
-          },
-        },
+        items: true,
       },
       orderBy: { createdAt: "desc" },
     })
@@ -54,7 +50,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(orders)
   } catch (error) {
     console.error("Error fetching orders:", error)
-    return NextResponse.json({ error: "An error occurred while fetching orders" }, { status: 500 })
+    return NextResponse.json({ error: "Failed to fetch orders. Please try again later." }, { status: 500 })
   }
 }
 
@@ -94,7 +90,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(order)
   } catch (error) {
     console.error("Error creating order:", error)
-    return NextResponse.json({ error: "An error occurred while creating the order" }, { status: 500 })
+    return NextResponse.json({ error: "Failed to create order. Please try again later." }, { status: 500 })
   }
 }
 

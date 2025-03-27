@@ -44,7 +44,8 @@ export default function OrdersTable({ status }: { status: "PENDING" | "APPROVED"
       const response = await fetch(`/api/orders?status=${status}`)
 
       if (!response.ok) {
-        throw new Error("Failed to fetch orders")
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to fetch orders")
       }
 
       const data = await response.json()
@@ -53,7 +54,7 @@ export default function OrdersTable({ status }: { status: "PENDING" | "APPROVED"
       console.error("Error fetching orders:", error)
       toast({
         title: "Error",
-        description: "Failed to load orders",
+        description: error instanceof Error ? error.message : "Failed to load orders",
         variant: "destructive",
       })
     } finally {
