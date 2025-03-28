@@ -60,42 +60,11 @@ export default function Footer() {
           <div>
             <h3 className="mb-4 text-lg font-semibold">Contact Us</h3>
             <address className="not-italic">
-              <p className="mb-2 text-sm">123 Bakery Street</p>
-              <p className="mb-2 text-sm">Cakeville, CV 12345</p>
-              <p className="mb-2 text-sm">Phone: (123) 456-7890</p>
+              <p className="mb-2 text-sm">Kavumkandam</p>
+              <p className="mb-2 text-sm">Kadanad, Kerala 686653</p>
+              <p className="mb-2 text-sm">Phone: 099469 56878</p>
               <p className="text-sm">Email: info@eadenscakeworld.com</p>
             </address>
-          </div>
-          <div>
-            <h3 className="mb-4 text-lg font-semibold">Follow Us</h3>
-            <div className="flex gap-4">
-              <Link href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-                <Facebook className="h-6 w-6 transition-colors hover:text-accent" />
-              </Link>
-              <Link href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-                <Instagram className="h-6 w-6 transition-colors hover:text-accent" />
-              </Link>
-              <Link href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter">
-                <Twitter className="h-6 w-6 transition-colors hover:text-accent" />
-              </Link>
-            </div>
-            <div className="mt-4">
-              <h4 className="mb-2 text-sm font-semibold">Subscribe to our newsletter</h4>
-              <form className="flex gap-2">
-                <input
-                  type="email"
-                  placeholder="Your email"
-                  className="w-full rounded-md border border-accent bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground"
-                  required
-                />
-                <button
-                  type="submit"
-                  className="rounded-md bg-accent px-3 py-2 text-sm font-medium text-accent-foreground"
-                >
-                  Subscribe
-                </button>
-              </form>
-            </div>
           </div>
         </div>
         <div className="mt-8 border-t border-accent pt-8 text-center text-sm">

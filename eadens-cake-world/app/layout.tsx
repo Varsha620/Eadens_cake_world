@@ -14,7 +14,7 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Eadens Cake World",
   description: "Delicious custom cakes for all occasions",
-    generator: 'v0.dev'
+  generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -23,14 +23,14 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="en" className="scroll-smooth">
+      <body className={`${inter.className} bg-[#EFD4C4]`}>
         <ThemeProvider attribute="class" defaultTheme="light">
           <AuthProvider>
             <CartProvider>
               <div className="flex min-h-screen flex-col">
                 <Navbar />
-                <main className="flex-1">{children}</main>
+                <main className="flex-1 animate-fade-in">{children}</main>
                 <Footer />
               </div>
               <Toaster />
@@ -42,4 +42,3 @@ export default function RootLayout({
   )
 }
 
-import './globals.css'

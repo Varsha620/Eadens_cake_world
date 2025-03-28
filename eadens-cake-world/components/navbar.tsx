@@ -16,8 +16,7 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const routes = [
-    { href: "/", label: "Home" },
-    { href: "/about", label: "About Us" },
+    { href: "/", label: "Home" }, // Updated Home route to point to About Us
     { href: "/shop", label: "Shop" },
     { href: "/customize", label: "Customize" },
     { href: "/gallery", label: "Gallery" },
@@ -29,7 +28,7 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-2 md:gap-4">
+        <div className="flex items-center gap-4">
           <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
             <SheetTrigger asChild className="md:hidden">
               <Button variant="ghost" size="icon" aria-label="Menu">
@@ -41,13 +40,11 @@ export default function Navbar() {
                 <div className="flex items-center justify-between">
                   <Link href="/" className="flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
                     <Image
-                      src="/placeholder.svg?height=40&width=40"
-                      width={40}
-                      height={40}
+                      src="/static/logo.png?height=60&width=120"
+                      width={60}
+                      height={60}
                       alt="Eadens Cake World Logo"
-                      className="rounded-full"
                     />
-                    <span className="text-xl font-bold text-primary">Eadens Cake World</span>
                   </Link>
                   <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(false)}>
                     <X className="h-5 w-5" />
@@ -70,15 +67,14 @@ export default function Navbar() {
               </div>
             </SheetContent>
           </Sheet>
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-3">
             <Image
-              src="/placeholder.svg?height=40&width=40"
-              width={40}
-              height={40}
+              src="/static/logo.png?height=60&width=120"
+              width={120}
+              height={60}
               alt="Eadens Cake World Logo"
-              className="rounded-full"
+              className="rounded-lg"
             />
-            <span className="hidden text-xl font-bold text-primary md:inline-block">Eadens Cake World</span>
           </Link>
         </div>
         <nav className="hidden md:flex md:gap-6">

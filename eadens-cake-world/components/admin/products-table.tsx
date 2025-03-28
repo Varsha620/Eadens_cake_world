@@ -28,9 +28,19 @@ export default function ProductsTable() {
   const fetchProducts = async () => {
     try {
       const response = await fetch("/api/products")
-
+      
       if (!response.ok) {
-        throw new Error("Failed to fetch products")
+        let errorMessage = "Failed to fetch products"
+        try {
+          const errorData = await response.text()
+          if (errorData) {
+            const parsedError = JSON.parse(errorData)
+            errorMessage = parsedError.error || errorMessage
+          }
+        } catch (e) {
+          console.error("Error parsing error response:", e)
+        }
+        throw new Error(errorMessage)
       }
 
       const data = await response.json()
@@ -39,9 +49,10 @@ export default function ProductsTable() {
       console.error("Error fetching products:", error)
       toast({
         title: "Error",
-        description: "Failed to load products",
+        description: error instanceof Error ? error.message : "Failed to load products",
         variant: "destructive",
       })
+      setProducts([]) // Clear products on error
     } finally {
       setIsLoading(false)
     }
@@ -299,4 +310,3 @@ export default function ProductsTable() {
     </div>
   )
 }
-

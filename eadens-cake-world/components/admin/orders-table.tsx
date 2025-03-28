@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/components/ui/use-toast"
-import { Check, X } from "lucide-react"
+import { Check, X, RefreshCw } from "lucide-react"
 
 type OrderItem = {
   id: string
@@ -38,25 +38,51 @@ export default function OrdersTable({ status }: { status: "PENDING" | "APPROVED"
   const { toast } = useToast()
   const [orders, setOrders] = useState<Order[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
 
   const fetchOrders = async () => {
+    setIsLoading(true)
+    setError(null)
     try {
-      const response = await fetch(`/api/orders?status=${status}`)
+      const response = await fetch(`/api/orders?status=${status}`, {
+        headers: {
+          "Cache-Control": "no-cache",
+        },
+      })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to fetch orders")
+        let errorMessage = "Failed to fetch orders"
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.message || errorData.error || errorMessage
+        } catch (e) {
+          console.error("Error parsing error response:", e)
+        }
+        throw new Error(errorMessage)
       }
 
       const data = await response.json()
       setOrders(data)
     } catch (error) {
       console.error("Error fetching orders:", error)
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to load orders",
-        variant: "destructive",
-      })
+      setError(error instanceof Error ? error.message : "Failed to load orders")
+
+      // Only show toast for the first error or if it's different from the previous one
+      if (retryCount === 0 || error instanceof Error) {
+        toast({
+          title: "Error",
+          description: error instanceof Error ? error.message : "Failed to load orders",
+          variant: "destructive",
+        })
+      }
+
+      // Auto-retry up to 3 times
+      if (retryCount < 3) {
+        setTimeout(() => {
+          setRetryCount(retryCount + 1)
+        }, 2000 * (retryCount + 1)) // Exponential backoff
+      }
     } finally {
       setIsLoading(false)
     }
@@ -64,7 +90,7 @@ export default function OrdersTable({ status }: { status: "PENDING" | "APPROVED"
 
   useEffect(() => {
     fetchOrders()
-  }, [status])
+  }, [status, retryCount])
 
   const handleApprove = async (id: string) => {
     try {
@@ -77,7 +103,8 @@ export default function OrdersTable({ status }: { status: "PENDING" | "APPROVED"
       })
 
       if (!response.ok) {
-        throw new Error("Failed to approve order")
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Failed to approve order")
       }
 
       toast({
@@ -90,7 +117,7 @@ export default function OrdersTable({ status }: { status: "PENDING" | "APPROVED"
       console.error("Error approving order:", error)
       toast({
         title: "Error",
-        description: "Failed to approve order",
+        description: error instanceof Error ? error.message : "Failed to approve order",
         variant: "destructive",
       })
     }
@@ -107,7 +134,8 @@ export default function OrdersTable({ status }: { status: "PENDING" | "APPROVED"
       })
 
       if (!response.ok) {
-        throw new Error("Failed to reject order")
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Failed to reject order")
       }
 
       toast({
@@ -121,7 +149,7 @@ export default function OrdersTable({ status }: { status: "PENDING" | "APPROVED"
       console.error("Error rejecting order:", error)
       toast({
         title: "Error",
-        description: "Failed to reject order",
+        description: error instanceof Error ? error.message : "Failed to reject order",
         variant: "destructive",
       })
     }
@@ -138,7 +166,8 @@ export default function OrdersTable({ status }: { status: "PENDING" | "APPROVED"
       })
 
       if (!response.ok) {
-        throw new Error("Failed to complete order")
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Failed to complete order")
       }
 
       toast({
@@ -151,18 +180,50 @@ export default function OrdersTable({ status }: { status: "PENDING" | "APPROVED"
       console.error("Error completing order:", error)
       toast({
         title: "Error",
-        description: "Failed to complete order",
+        description: error instanceof Error ? error.message : "Failed to complete order",
         variant: "destructive",
       })
     }
   }
 
-  if (isLoading) {
-    return <p className="text-center">Loading orders...</p>
+  if (isLoading && orders.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8">
+        <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+        <p className="mt-2 text-sm text-muted-foreground">Loading orders...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8">
+        <p className="text-red-500">{error}</p>
+        <Button
+          variant="outline"
+          className="mt-4 gap-2"
+          onClick={() => {
+            setRetryCount(0)
+            fetchOrders()
+          }}
+        >
+          <RefreshCw className="h-4 w-4" />
+          Retry
+        </Button>
+      </div>
+    )
   }
 
   if (orders.length === 0) {
-    return <p className="text-center text-muted-foreground">No {status.toLowerCase()} orders found.</p>
+    return (
+      <div className="flex flex-col items-center justify-center py-8">
+        <p className="text-muted-foreground">No {status.toLowerCase()} orders found.</p>
+        <Button variant="outline" className="mt-4 gap-2" onClick={fetchOrders}>
+          <RefreshCw className="h-4 w-4" />
+          Refresh
+        </Button>
+      </div>
+    )
   }
 
   return (
@@ -194,7 +255,7 @@ export default function OrdersTable({ status }: { status: "PENDING" | "APPROVED"
                   ))}
                 </ul>
               </td>
-              <td className="px-4 py-2">${order.total.toFixed(2)}</td>
+              <td className="px-4 py-2">₹{order.total.toFixed(2)}</td>
               <td className="px-4 py-2">
                 <Badge variant={order.deliveryMethod === "DELIVERY" ? "secondary" : "outline"}>
                   {order.deliveryMethod === "DELIVERY" ? "Delivery" : "Takeaway"}
@@ -230,4 +291,6 @@ export default function OrdersTable({ status }: { status: "PENDING" | "APPROVED"
     </div>
   )
 }
+
+
 

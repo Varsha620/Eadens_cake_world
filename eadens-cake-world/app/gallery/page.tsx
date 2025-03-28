@@ -9,62 +9,62 @@ export const metadata: Metadata = {
 // Mock data for gallery images
 const galleryImages = [
   {
-    src: "/placeholder.svg?height=400&width=400",
+    src: "/static/1.jpg?height=400&width=400",
     alt: "Birthday cake with colorful sprinkles",
     category: "Birthday",
   },
   {
-    src: "/placeholder.svg?height=400&width=400",
+    src: "/static/2.jpg?height=400&width=400",
     alt: "Elegant wedding cake with white frosting",
     category: "Wedding",
   },
   {
-    src: "/placeholder.svg?height=400&width=400",
+    src: "/static/3'.jpg?height=400&width=400",
     alt: "Anniversary cake with gold decorations",
     category: "Anniversary",
   },
   {
-    src: "/placeholder.svg?height=400&width=400",
+    src: "/static/4.jpg?height=400&width=400",
     alt: "Baby shower cake with pastel colors",
     category: "Baby Shower",
   },
   {
-    src: "/placeholder.svg?height=400&width=400",
+    src: "/static/5.jpg?height=400&width=400",
     alt: "Graduation cake with cap decoration",
     category: "Graduation",
   },
   {
-    src: "/placeholder.svg?height=400&width=400",
+    src: "/static/6.jpg?height=400&width=400",
     alt: "Christmas themed cake with festive decorations",
     category: "Holiday",
   },
   {
-    src: "/placeholder.svg?height=400&width=400",
+    src: "/static/7.jpg?height=400&width=400",
     alt: "Custom designed cake with unique shape",
     category: "Custom",
   },
   {
-    src: "/placeholder.svg?height=400&width=400",
+    src: "/static/8.jpg?height=400&width=400",
     alt: "Corporate event cake with logo",
     category: "Corporate",
   },
   {
-    src: "/placeholder.svg?height=400&width=400",
+    src: "/static/9.jpg?height=400&width=400",
     alt: "Valentine's day cake with heart decorations",
     category: "Holiday",
   },
   {
-    src: "/placeholder.svg?height=400&width=400",
+    src: "/static/10.jpg?height=400&width=400",
     alt: "Halloween themed cake with spooky decorations",
     category: "Holiday",
   },
   {
-    src: "/placeholder.svg?height=400&width=400",
+    src: "/static/13.jpg?height=400&width=400",
     alt: "Children's birthday cake with cartoon character",
     category: "Birthday",
   },
   {
-    src: "/placeholder.svg?height=400&width=400",
+    src: "/static/14.jpg?height=400&width=400",
     alt: "Engagement cake with ring decoration",
     category: "Engagement",
   },

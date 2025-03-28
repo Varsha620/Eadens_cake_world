@@ -34,28 +34,28 @@ export async function verifyToken(token: string) {
 
 // Server-side session handling
 export async function getSession() {
-  const token = cookies().get("token")?.value
+  const cookieStore = cookies() // No need to await cookies()
+  const token = cookieStore.get("token")?.value
+
   if (!token) return null
 
-  return await verifyToken(token)
+  try {
+    return await verifyToken(token) // Verify the token
+  } catch (error) {
+    console.error("Token verification failed:", error)
+    return null
+  }
 }
 
 // Server-side current user
 export async function getCurrentUser() {
   const session = await getSession()
-  if (!session?.userId) return null
+  if (!session) return null
 
-  return await prisma.user.findUnique({
-    where: { id: session.userId },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      address: true,
-      phone: true,
-    },
-  })
+  return {
+    userId: session.userId,
+    role: session.role,
+  }
 }
 
 // Middleware auth check

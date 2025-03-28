@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
-import AdminDashboard from "@/components/admin/dashboard"
+import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/lib/auth"
+import AdminDashboard from "../../components/admin/dashboard"
 
 export const metadata: Metadata = {
   title: "Admin Dashboard | Eadens Cake World",
@@ -9,10 +10,11 @@ export const metadata: Metadata = {
 
 export default async function AdminPage() {
   const user = await getCurrentUser()
-  
+
   if (!user || user.role !== "ADMIN") {
-    redirect("/login")
+    redirect("/login") // Redirect unauthorized users to the login page
   }
+
   return <AdminDashboard />
 }
 
