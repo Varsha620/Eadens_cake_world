@@ -9,21 +9,13 @@ export async function POST(request: NextRequest) {
     const data = await request.json()
 
     // Calculate price based on options
-    let price = 35.99
-
-    // Add price based on size
+    let price = 35.99 // Base price in ₹
     if (data.size === "10 inch") price += 10
     else if (data.size === "12 inch") price += 15
     else if (data.size === "Tiered (2 layers)") price += 25
     else if (data.size === "Tiered (3 layers)") price += 40
-
-    // Add price for premium flavors
     if (["Red Velvet", "Carrot"].includes(data.flavor)) price += 5
-
-    // Add price for premium fillings
     if (["Chocolate Ganache", "Caramel"].includes(data.filling)) price += 3
-
-    // Add price for fondant
     if (data.frosting === "Fondant") price += 8
 
     // Add price for premium decorations

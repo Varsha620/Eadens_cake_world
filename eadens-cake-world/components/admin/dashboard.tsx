@@ -74,13 +74,13 @@ export default function AdminDashboard() {
                 <TabsTrigger value="completed">Completed</TabsTrigger>
               </TabsList>
               <TabsContent value="pending" className="mt-4">
-                <OrdersTable status="pending" />
+                <OrdersTable status="PENDING" />
               </TabsContent>
               <TabsContent value="approved" className="mt-4">
-                <OrdersTable status="approved" />
+                <OrdersTable status="APPROVED" />
               </TabsContent>
               <TabsContent value="completed" className="mt-4">
-                <OrdersTable status="completed" />
+                <OrdersTable status="COMPLETED" />
               </TabsContent>
             </Tabs>
           </CardContent>

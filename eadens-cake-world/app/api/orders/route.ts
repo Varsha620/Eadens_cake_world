@@ -1,35 +1,21 @@
 import { type NextRequest, NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
-import { getCurrentUser, requireAdmin } from "@/lib/auth"
+import { requireAdmin } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/auth"
 
 export async function GET(request: NextRequest) {
   try {
     const session = await requireAdmin(request)
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized access" }, { status: 401 })
+      return NextResponse.json({ success: false, error: "Unauthorized access" }, { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)
     const status = searchParams.get("status")
-    const date = searchParams.get("date")
 
     const where: any = {}
-
     if (status) {
       where.status = status
-    }
-
-    if (date) {
-      const startDate = new Date(date)
-      startDate.setHours(0, 0, 0, 0)
-
-      const endDate = new Date(date)
-      endDate.setHours(23, 59, 59, 999)
-
-      where.scheduledDate = {
-        gte: startDate,
-        lte: endDate,
-      }
     }
 
     const orders = await prisma.order.findMany({
@@ -47,10 +33,10 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: "desc" },
     })
 
-    return NextResponse.json(orders)
+    return NextResponse.json({ success: true, data: orders })
   } catch (error) {
     console.error("Error fetching orders:", error)
-    return NextResponse.json({ error: "Failed to fetch orders. Please try again later." }, { status: 500 })
+    return NextResponse.json({ success: false, error: "Failed to fetch orders. Please try again later." }, { status: 500 })
   }
 }
 
@@ -58,11 +44,10 @@ export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser()
     if (!user) {
-      return NextResponse.json({ error: "You must be logged in to place an order" }, { status: 401 })
+      return NextResponse.json({ success: false, error: "You must be logged in to place an order" }, { status: 401 })
     }
 
     const data = await request.json()
-
     const order = await prisma.order.create({
       data: {
         userId: user.id,
@@ -87,10 +72,9 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    return NextResponse.json(order)
+    return NextResponse.json({ success: true, order })
   } catch (error) {
     console.error("Error creating order:", error)
-    return NextResponse.json({ error: "Failed to create order. Please try again later." }, { status: 500 })
+    return NextResponse.json({ success: false, error: "Failed to create order. Please try again later." }, { status: 500 })
   }
 }
-

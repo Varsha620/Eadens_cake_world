@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/components/ui/use-toast"
@@ -40,13 +40,26 @@ export default function OrdersTable({ status }: { status: "PENDING" | "APPROVED"
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [retryCount, setRetryCount] = useState(0)
+  const [approvingId, setApprovingId] = useState<string | null>(null)
+  const [rejectingId, setRejectingId] = useState<string | null>(null)
+  const [completingId, setCompletingId] = useState<string | null>(null)
+  const abortControllerRef = useRef<AbortController | null>(null)
+  const isMounted = useRef(true)
 
   const fetchOrders = async () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+    abortControllerRef.current = new AbortController()
+
     setIsLoading(true)
     setError(null)
+
     try {
       const response = await fetch(`/api/orders?status=${status}`, {
+        signal: abortControllerRef.current.signal,
         headers: {
+          "Content-Type": "application/json",
           "Cache-Control": "no-cache",
         },
       })
@@ -55,44 +68,49 @@ export default function OrdersTable({ status }: { status: "PENDING" | "APPROVED"
         let errorMessage = "Failed to fetch orders"
         try {
           const errorData = await response.json()
-          errorMessage = errorData.message || errorData.error || errorMessage
-        } catch (e) {
-          console.error("Error parsing error response:", e)
+          errorMessage = errorData.error || errorMessage
+        } catch {
+          console.error("Response is not valid JSON")
         }
         throw new Error(errorMessage)
       }
 
       const data = await response.json()
-      setOrders(data)
+      if (!data.success) {
+        throw new Error(data.error || "Failed to fetch orders")
+      }
+
+      setOrders(data.data || [])
     } catch (error) {
       console.error("Error fetching orders:", error)
       setError(error instanceof Error ? error.message : "Failed to load orders")
-
-      // Only show toast for the first error or if it's different from the previous one
-      if (retryCount === 0 || error instanceof Error) {
-        toast({
-          title: "Error",
-          description: error instanceof Error ? error.message : "Failed to load orders",
-          variant: "destructive",
-        })
-      }
-
-      // Auto-retry up to 3 times
-      if (retryCount < 3) {
-        setTimeout(() => {
-          setRetryCount(retryCount + 1)
-        }, 2000 * (retryCount + 1)) // Exponential backoff
-      }
     } finally {
       setIsLoading(false)
     }
   }
 
   useEffect(() => {
+    isMounted.current = true
     fetchOrders()
+
+    let interval: NodeJS.Timeout | null = null
+    if (status === "PENDING") {
+      interval = setInterval(fetchOrders, 30000)
+    }
+
+    return () => {
+      isMounted.current = false
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+      }
+      if (interval) {
+        clearInterval(interval)
+      }
+    }
   }, [status, retryCount])
 
   const handleApprove = async (id: string) => {
+    setApprovingId(id)
     try {
       const response = await fetch(`/api/orders/${id}`, {
         method: "PATCH",
@@ -120,10 +138,13 @@ export default function OrdersTable({ status }: { status: "PENDING" | "APPROVED"
         description: error instanceof Error ? error.message : "Failed to approve order",
         variant: "destructive",
       })
+    } finally {
+      setApprovingId(null)
     }
   }
 
   const handleReject = async (id: string) => {
+    setRejectingId(id)
     try {
       const response = await fetch(`/api/orders/${id}`, {
         method: "PATCH",
@@ -152,10 +173,13 @@ export default function OrdersTable({ status }: { status: "PENDING" | "APPROVED"
         description: error instanceof Error ? error.message : "Failed to reject order",
         variant: "destructive",
       })
+    } finally {
+      setRejectingId(null)
     }
   }
 
   const handleComplete = async (id: string) => {
+    setCompletingId(id)
     try {
       const response = await fetch(`/api/orders/${id}`, {
         method: "PATCH",
@@ -183,6 +207,8 @@ export default function OrdersTable({ status }: { status: "PENDING" | "APPROVED"
         description: error instanceof Error ? error.message : "Failed to complete order",
         variant: "destructive",
       })
+    } finally {
+      setCompletingId(null)
     }
   }
 
@@ -218,7 +244,7 @@ export default function OrdersTable({ status }: { status: "PENDING" | "APPROVED"
     return (
       <div className="flex flex-col items-center justify-center py-8">
         <p className="text-muted-foreground">No {status.toLowerCase()} orders found.</p>
-        <Button variant="outline" className="mt-4 gap-2" onClick={fetchOrders}>
+        <Button variant="outline" className="mt-4 gap-2" onClick={() => fetchOrders()}>
           <RefreshCw className="h-4 w-4" />
           Refresh
         </Button>
@@ -265,16 +291,44 @@ export default function OrdersTable({ status }: { status: "PENDING" | "APPROVED"
               <td className="px-4 py-2">
                 {status === "PENDING" && (
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline" className="h-8 w-8 p-0" onClick={() => handleApprove(order.id)}>
-                      <Check className="h-4 w-4 text-green-500" />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 w-8 p-0"
+                      onClick={() => handleApprove(order.id)}
+                      disabled={approvingId === order.id}
+                    >
+                      {approvingId === order.id ? (
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Check className="h-4 w-4 text-green-500" />
+                      )}
                     </Button>
-                    <Button size="sm" variant="outline" className="h-8 w-8 p-0" onClick={() => handleReject(order.id)}>
-                      <X className="h-4 w-4 text-red-500" />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 w-8 p-0"
+                      onClick={() => handleReject(order.id)}
+                      disabled={rejectingId === order.id}
+                    >
+                      {rejectingId === order.id ? (
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <X className="h-4 w-4 text-red-500" />
+                      )}
                     </Button>
                   </div>
                 )}
                 {status === "APPROVED" && (
-                  <Button size="sm" variant="outline" onClick={() => handleComplete(order.id)}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleComplete(order.id)}
+                    disabled={completingId === order.id}
+                  >
+                    {completingId === order.id ? (
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    ) : null}
                     Mark Completed
                   </Button>
                 )}
@@ -291,6 +345,3 @@ export default function OrdersTable({ status }: { status: "PENDING" | "APPROVED"
     </div>
   )
 }
-
-
-

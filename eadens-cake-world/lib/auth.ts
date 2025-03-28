@@ -1,3 +1,4 @@
+// lib/auth.ts
 import { cookies } from "next/headers"
 import { jwtVerify, SignJWT } from "jose"
 import type { NextRequest } from "next/server"
@@ -15,12 +16,11 @@ export async function comparePasswords(plainPassword: string, hashedPassword: st
 }
 
 export async function createToken(userId: string, role: string) {
-  const token = await new SignJWT({ userId, role })
+  return await new SignJWT({ userId, role })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("7d")
     .sign(new TextEncoder().encode(JWT_SECRET))
-  return token
 }
 
 export async function verifyToken(token: string) {
@@ -28,37 +28,32 @@ export async function verifyToken(token: string) {
     const { payload } = await jwtVerify(token, new TextEncoder().encode(JWT_SECRET))
     return payload
   } catch (error) {
-    return null
-  }
-}
-
-// Server-side session handling
-export async function getSession() {
-  const cookieStore = cookies() // No need to await cookies()
-  const token = cookieStore.get("token")?.value
-
-  if (!token) return null
-
-  try {
-    return await verifyToken(token) // Verify the token
-  } catch (error) {
     console.error("Token verification failed:", error)
     return null
   }
 }
 
-// Server-side current user
+// Updated session handling with proper async cookie access
+export async function getSession() {
+  const cookieStore = await cookies() // Must await
+  const token = cookieStore.get("token")?.value
+
+  if (!token) return null
+
+  return await verifyToken(token)
+}
+
 export async function getCurrentUser() {
   const session = await getSession()
   if (!session) return null
 
   return {
-    userId: session.userId,
-    role: session.role,
+    userId: session.userId as string,
+    role: session.role as string,
   }
 }
 
-// Middleware auth check
+// Middleware functions
 export async function requireAuth(request: NextRequest) {
   const token = request.cookies.get("token")?.value
   if (!token) return null
@@ -72,9 +67,8 @@ export async function requireAuth(request: NextRequest) {
   }
 }
 
-// Middleware admin check
 export async function requireAdmin(request: NextRequest) {
-  const session = await requireAuth(request)
-  if (!session || session.role !== "ADMIN") return null
-  return session
+  const auth = await requireAuth(request)
+  if (!auth || auth.role !== "ADMIN") return null
+  return auth
 }

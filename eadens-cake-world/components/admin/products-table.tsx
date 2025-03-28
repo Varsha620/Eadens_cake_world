@@ -265,7 +265,7 @@ export default function ProductsTable() {
                       className="w-24"
                     />
                   ) : (
-                    `$${product.price.toFixed(2)}`
+                    `₹${product.price.toFixed(2)}` // Changed $ to ₹
                   )}
                 </td>
                 <td className="px-4 py-2">

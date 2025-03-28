@@ -3,17 +3,16 @@ import type { NextRequest } from "next/server"
 import { verifyToken } from "./lib/auth"
 
 export async function middleware(request: NextRequest) {
-  // Check for admin routes
-  if (request.nextUrl.pathname.startsWith("/admin")) {
-    const token = request.cookies.get("token")?.value
+  const token = request.cookies.get("token")?.value
 
+  // Admin routes
+  if (request.nextUrl.pathname.startsWith("/admin")) {
     if (!token) {
       return NextResponse.redirect(new URL("/login", request.url))
     }
 
     try {
       const payload = await verifyToken(token)
-
       if (!payload || payload.role !== "ADMIN") {
         return NextResponse.redirect(new URL("/", request.url))
       }
@@ -22,17 +21,14 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Check for account routes
+  // Account routes
   if (request.nextUrl.pathname.startsWith("/account")) {
-    const token = request.cookies.get("token")?.value
-
     if (!token) {
       return NextResponse.redirect(new URL("/login", request.url))
     }
 
     try {
       const payload = await verifyToken(token)
-
       if (!payload) {
         return NextResponse.redirect(new URL("/login", request.url))
       }
@@ -47,4 +43,3 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: ["/admin/:path*", "/account/:path*"],
 }
-

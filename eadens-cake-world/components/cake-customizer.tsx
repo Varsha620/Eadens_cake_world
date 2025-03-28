@@ -135,26 +135,14 @@ export default function CakeCustomizer() {
   }
 
   const calculatePrice = () => {
-    // Base price
-    let calculatedPrice = 35.99
-
-    // Add price based on size
-    if (customCake.size === "10 inch") calculatedPrice += 10
-    else if (customCake.size === "12 inch") calculatedPrice += 15
+    let calculatedPrice = 35.99 // Base price in ₹
+    if (customCake.size === "10 inch") calculatedPrice += 100
+    else if (customCake.size === "12 inch") calculatedPrice += 150
     else if (customCake.size === "Tiered (2 layers)") calculatedPrice += 25
     else if (customCake.size === "Tiered (3 layers)") calculatedPrice += 40
-
-    // Add price for premium flavors
     if (["Red Velvet", "Carrot"].includes(customCake.flavor)) calculatedPrice += 5
-
-    // Add price for premium fillings
     if (["Chocolate Ganache", "Caramel"].includes(customCake.filling)) calculatedPrice += 3
-
-    // Add price for fondant
     if (customCake.frosting === "Fondant") calculatedPrice += 8
-
-    // Add price for premium decorations
-    if (["Fresh Fruit", "Macarons", "Edible Flowers"].includes(customCake.decoration)) calculatedPrice += 7
 
     setPrice(calculatedPrice)
     return calculatedPrice

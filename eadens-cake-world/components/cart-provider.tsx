@@ -119,10 +119,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const deliveryFee = deliveryMethod === "delivery" ? 5.99 : 0
       const total = subtotal + deliveryFee
 
+      
+
       const response = await fetch("/api/orders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer "your-nextauth-secret-here"`,
         },
         body: JSON.stringify({
           deliveryMethod: deliveryMethod.toUpperCase(),
@@ -134,9 +137,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }),
       })
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Failed to submit order")
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Failed to submit order")
       }
 
       toast({
@@ -154,6 +158,57 @@ export function CartProvider({ children }: { children: ReactNode }) {
       })
       return false
     }
+  }
+
+  const handleSubmitOrder = async () => {
+    try {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          deliveryMethod: "DELIVERY",
+          address: "123 Main St",
+          subtotal: 100,
+          deliveryFee: 10,
+          total: 110,
+          items: [
+            {
+              id: "1",
+              name: "Chocolate Cake",
+              price: 100,
+              quantity: 1,
+              type: "standard",
+            },
+          ],
+        }),
+      })
+
+      let data
+      try {
+        data = await response.json()
+      } catch {
+        throw new Error("Invalid response from server")
+      }
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Failed to submit order")
+      }
+
+      toast({
+        title: "Order Submitted",
+        description: "Your order has been successfully submitted.",
+      })
+    } catch (error) {
+      console.error("Error submitting order:", error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to submit order",
+        variant: "destructive",
+      })
+    }
+    
   }
 
   return (
