@@ -48,18 +48,26 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser()
+    const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json(
         { success: false, error: "You must be logged in to place an order" },
         { status: 401 }
-      )
+      );
     }
 
-    const data = await request.json()
+    const data = await request.json();
+    
+    if (!data || !data.items || !Array.isArray(data.items)) {
+      return NextResponse.json(
+        { success: false, error: "Invalid order data" },
+        { status: 400 }
+      );
+    }
+
     const order = await prisma.order.create({
       data: {
-        userId: user.id,
+        userId: user.userId,
         status: "PENDING",
         deliveryMethod: data.deliveryMethod,
         address: data.address,
@@ -74,19 +82,22 @@ export async function POST(request: NextRequest) {
             price: item.price,
             quantity: item.quantity,
             type: item.type,
-            customOptions: item.customOptions ? JSON.stringify(item.customOptions) : null,
+            customOptions: item.customOptions,
             image: item.image,
           })),
         },
       },
-    })
+    });
 
-    return NextResponse.json({ success: true, order })
+    return NextResponse.json(
+      { success: true, order }, 
+      { status: 201 }
+    );
   } catch (error) {
-    console.error("Error creating order:", error)
+    console.error("Error creating order:", error);
     return NextResponse.json(
       { success: false, error: "Failed to create order. Please try again later." },
       { status: 500 }
-    )
+    );
   }
 }

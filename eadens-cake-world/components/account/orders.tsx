@@ -36,24 +36,25 @@ export default function AccountOrders() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await fetch("/api/orders/user")
-
+        const response = await fetch("/api/orders/user");
+        
         if (!response.ok) {
-          throw new Error("Failed to fetch orders")
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to fetch orders");
         }
-
-        const data = await response.json()
-        setOrders(data)
+  
+        const data = await response.json();
+        setOrders(Array.isArray(data) ? data : []);
       } catch (error) {
-        console.error("Error fetching orders:", error)
-        setError("Failed to load orders. Please try again later.")
+        console.error("Error fetching orders:", error);
+        setError(error instanceof Error ? error.message : "Failed to load orders");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
-
-    fetchOrders()
-  }, [])
+    };
+  
+    fetchOrders();
+  }, []);
 
   if (isLoading) {
     return <p>Loading your orders...</p>
@@ -149,8 +150,8 @@ export default function AccountOrders() {
                           {item.customOptions && (
                             <p className="text-xs text-muted-foreground">
                               {JSON.parse(item.customOptions)
-                                .filter(([key, value]) => value && key !== "specialInstructions")
-                                .map(([key, value]) => `${key}: ${value}`)
+                                .filter(([key, value]: [string, any]) => value && key !== "specialInstructions")
+                                .map(([key, value]: [string, any]) => `${key}: ${value}`)
                                 .join(", ")}
                             </p>
                           )}

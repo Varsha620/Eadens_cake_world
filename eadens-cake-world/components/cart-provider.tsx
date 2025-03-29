@@ -88,78 +88,81 @@ export function CartProvider({ children }: { children: ReactNode }) {
         title: "Login Required",
         description: "Please login to place an order",
         variant: "destructive",
-      })
-      router.push("/login")
-      return false
+      });
+      router.push("/login");
+      return false;
     }
-
+  
     if (cartItems.length === 0) {
       toast({
         title: "Empty Cart",
         description: "Your cart is empty",
         variant: "destructive",
-      })
-      return false
+      });
+      return false;
     }
-
+  
     if (deliveryMethod === "delivery" && !address) {
       toast({
         title: "Address Required",
         description: "Please enter your delivery address",
         variant: "destructive",
-      })
-      return false
+      });
+      return false;
     }
-
+  
     try {
-      const subtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0)
-      const deliveryFee = deliveryMethod === "delivery" ? 5.99 : 0
-      const total = subtotal + deliveryFee
-
+      const subtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+      const deliveryFee = deliveryMethod === "delivery" ? 5.99 : 0;
+      const total = subtotal + deliveryFee;
+  
       const orderData = {
         deliveryMethod: deliveryMethod.toUpperCase(),
-        address,
+        address: address || null,
         subtotal,
         deliveryFee,
         total,
         items: cartItems.map(item => ({
-          ...item,
-          // Ensure customOptions is properly stringified if it exists
-          customOptions: item.customOptions ? JSON.stringify(item.customOptions) : undefined
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          type: item.type,
+          image: item.image,
+          customOptions: item.customOptions ? JSON.stringify(item.customOptions) : null
         })),
-      }
-
+      };
+  
       const response = await fetch("/api/orders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(orderData),
-      })
-
+      });
+  
+      const data = await response.json();
+  
       if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(errorText || "Failed to submit order")
+        throw new Error(data.error || "Failed to submit order");
       }
-
-      const data = await response.json()
-
+  
       toast({
         title: "Order Submitted",
         description: "Your order has been sent to the admin for approval",
-      })
-      clearCart()
-      return true
+      });
+      clearCart();
+      return true;
     } catch (error) {
-      console.error("Order submission error:", error)
+      console.error("Order submission error:", error);
       toast({
         title: "Order Failed",
         description: error instanceof Error ? error.message : "An error occurred while submitting your order",
         variant: "destructive",
-      })
-      return false
+      });
+      return false;
     }
-  }
+  };
 
   return (
     <CartContext.Provider
