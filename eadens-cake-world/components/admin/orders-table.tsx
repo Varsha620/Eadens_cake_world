@@ -51,39 +51,41 @@ export default function OrdersTable({ status }: { status: "PENDING" | "APPROVED"
       abortControllerRef.current.abort()
     }
     abortControllerRef.current = new AbortController()
-
+  
     setIsLoading(true)
     setError(null)
-
+  
     try {
       const response = await fetch(`/api/orders?status=${status}`, {
         signal: abortControllerRef.current.signal,
         headers: {
           "Content-Type": "application/json",
-          "Cache-Control": "no-cache",
         },
       })
-
+  
       if (!response.ok) {
         let errorMessage = "Failed to fetch orders"
         try {
           const errorData = await response.json()
           errorMessage = errorData.error || errorMessage
-        } catch {
-          console.error("Response is not valid JSON")
+        } catch (e) {
+          console.error("Failed to parse error response:", e)
+          errorMessage = await response.text() || errorMessage
         }
         throw new Error(errorMessage)
       }
-
+  
       const data = await response.json()
       if (!data.success) {
         throw new Error(data.error || "Failed to fetch orders")
       }
-
+  
       setOrders(data.data || [])
     } catch (error) {
-      console.error("Error fetching orders:", error)
-      setError(error instanceof Error ? error.message : "Failed to load orders")
+      if (error instanceof Error && error.name !== 'AbortError') {
+        console.error("Error fetching orders:", error)
+        setError(error instanceof Error ? error.message : "Failed to load orders")
+      }
     } finally {
       setIsLoading(false)
     }

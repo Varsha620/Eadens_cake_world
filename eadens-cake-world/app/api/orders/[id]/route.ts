@@ -21,7 +21,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
 
     // Only allow admins or the order owner to view the order
-    if (user.role !== "ADMIN" && order.userId !== user.id) {
+    if (user.role !== "ADMIN" && order.userId !== user.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 

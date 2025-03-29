@@ -51,7 +51,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addToCart = (item: Omit<CartItem, "quantity">) => {
     setCartItems((prevItems) => {
-      // Check if item already exists in cart
       const existingItemIndex = prevItems.findIndex(
         (cartItem) =>
           cartItem.id === item.id &&
@@ -60,12 +59,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       )
 
       if (existingItemIndex !== -1) {
-        // Item exists, update quantity
         const updatedItems = [...prevItems]
         updatedItems[existingItemIndex].quantity += 1
         return updatedItems
       } else {
-        // Item doesn't exist, add new item
         return [...prevItems, { ...item, quantity: 1 }]
       }
     })
@@ -119,29 +116,33 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const deliveryFee = deliveryMethod === "delivery" ? 5.99 : 0
       const total = subtotal + deliveryFee
 
-      
+      const orderData = {
+        deliveryMethod: deliveryMethod.toUpperCase(),
+        address,
+        subtotal,
+        deliveryFee,
+        total,
+        items: cartItems.map(item => ({
+          ...item,
+          // Ensure customOptions is properly stringified if it exists
+          customOptions: item.customOptions ? JSON.stringify(item.customOptions) : undefined
+        })),
+      }
 
       const response = await fetch("/api/orders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer "your-nextauth-secret-here"`,
         },
-        body: JSON.stringify({
-          deliveryMethod: deliveryMethod.toUpperCase(),
-          address,
-          subtotal,
-          deliveryFee,
-          total,
-          items: cartItems,
-        }),
+        body: JSON.stringify(orderData),
       })
 
-      const data = await response.json()
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || "Failed to submit order")
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(errorText || "Failed to submit order")
       }
+
+      const data = await response.json()
 
       toast({
         title: "Order Submitted",
@@ -158,57 +159,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       })
       return false
     }
-  }
-
-  const handleSubmitOrder = async () => {
-    try {
-      const response = await fetch("/api/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          deliveryMethod: "DELIVERY",
-          address: "123 Main St",
-          subtotal: 100,
-          deliveryFee: 10,
-          total: 110,
-          items: [
-            {
-              id: "1",
-              name: "Chocolate Cake",
-              price: 100,
-              quantity: 1,
-              type: "standard",
-            },
-          ],
-        }),
-      })
-
-      let data
-      try {
-        data = await response.json()
-      } catch {
-        throw new Error("Invalid response from server")
-      }
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || "Failed to submit order")
-      }
-
-      toast({
-        title: "Order Submitted",
-        description: "Your order has been successfully submitted.",
-      })
-    } catch (error) {
-      console.error("Error submitting order:", error)
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to submit order",
-        variant: "destructive",
-      })
-    }
-    
   }
 
   return (
@@ -234,4 +184,3 @@ export function useCart() {
   }
   return context
 }
-

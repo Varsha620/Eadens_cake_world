@@ -7,7 +7,10 @@ export async function GET(request: NextRequest) {
   try {
     const session = await requireAdmin(request)
     if (!session) {
-      return NextResponse.json({ success: false, error: "Unauthorized access" }, { status: 401 })
+      return NextResponse.json(
+        { success: false, error: "Unauthorized access" }, 
+        { status: 401 }
+      )
     }
 
     const { searchParams } = new URL(request.url)
@@ -36,7 +39,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, data: orders })
   } catch (error) {
     console.error("Error fetching orders:", error)
-    return NextResponse.json({ success: false, error: "Failed to fetch orders. Please try again later." }, { status: 500 })
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch orders. Please try again later." },
+      { status: 500 }
+    )
   }
 }
 
@@ -44,7 +50,10 @@ export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser()
     if (!user) {
-      return NextResponse.json({ success: false, error: "You must be logged in to place an order" }, { status: 401 })
+      return NextResponse.json(
+        { success: false, error: "You must be logged in to place an order" },
+        { status: 401 }
+      )
     }
 
     const data = await request.json()
@@ -75,6 +84,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, order })
   } catch (error) {
     console.error("Error creating order:", error)
-    return NextResponse.json({ success: false, error: "Failed to create order. Please try again later." }, { status: 500 })
+    return NextResponse.json(
+      { success: false, error: "Failed to create order. Please try again later." },
+      { status: 500 }
+    )
   }
 }
