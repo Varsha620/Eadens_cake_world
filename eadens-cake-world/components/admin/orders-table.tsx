@@ -51,10 +51,10 @@ export default function OrdersTable({ status }: { status: "PENDING" | "APPROVED"
       abortControllerRef.current.abort()
     }
     abortControllerRef.current = new AbortController()
-  
+
     setIsLoading(true)
     setError(null)
-  
+
     try {
       const response = await fetch(`/api/orders?status=${status}`, {
         signal: abortControllerRef.current.signal,
@@ -62,30 +62,27 @@ export default function OrdersTable({ status }: { status: "PENDING" | "APPROVED"
           "Content-Type": "application/json",
         },
       })
-  
+
       if (!response.ok) {
         let errorMessage = "Failed to fetch orders"
         try {
           const errorData = await response.json()
           errorMessage = errorData.error || errorMessage
-        } catch (e) {
-          console.error("Failed to parse error response:", e)
-          errorMessage = await response.text() || errorMessage
+        } catch {
+          console.error("Response is not valid JSON")
         }
         throw new Error(errorMessage)
       }
-  
+
       const data = await response.json()
       if (!data.success) {
         throw new Error(data.error || "Failed to fetch orders")
       }
-  
+
       setOrders(data.data || [])
     } catch (error) {
-      if (error instanceof Error && error.name !== 'AbortError') {
-        console.error("Error fetching orders:", error)
-        setError(error instanceof Error ? error.message : "Failed to load orders")
-      }
+      console.error("Error fetching orders:", error)
+      setError(error instanceof Error ? error.message : "Failed to load orders")
     } finally {
       setIsLoading(false)
     }
@@ -277,9 +274,7 @@ export default function OrdersTable({ status }: { status: "PENDING" | "APPROVED"
               <td className="px-4 py-2">
                 <ul className="list-inside list-disc">
                   {order.items.map((item, index) => (
-                    <li key={index} className="text-sm">
-                      {item.name} (x{item.quantity})
-                    </li>
+                    <li key={index} className="text-sm">{item.name} (x{item.quantity})</li>
                   ))}
                 </ul>
               </td>

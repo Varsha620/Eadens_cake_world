@@ -11,7 +11,7 @@ type OrderItem = {
   price: number
   quantity: number
   type: string
-  customOptions?: string
+  customOptions?: string | Record<string, any> // Updated to accept both string and object
   image?: string
 }
 
@@ -55,6 +55,29 @@ export default function AccountOrders() {
   
     fetchOrders();
   }, []);
+
+  // Helper function to safely parse and display custom options
+  const renderCustomOptions = (customOptions: string | Record<string, any> | undefined) => {
+    if (!customOptions) return null;
+
+    try {
+      const options = typeof customOptions === 'string' 
+        ? JSON.parse(customOptions) 
+        : customOptions;
+
+      if (!options || typeof options !== 'object') {
+        return null;
+      }
+
+      return Object.entries(options)
+        .filter(([key, value]) => value && key !== "specialInstructions")
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(", ");
+    } catch (error) {
+      console.error("Error parsing customOptions:", error);
+      return "Custom options unavailable";
+    }
+  };
 
   if (isLoading) {
     return <p>Loading your orders...</p>
@@ -108,7 +131,7 @@ export default function AccountOrders() {
                   <Badge className={getStatusColor(order.status)}>
                     {order.status.charAt(0) + order.status.slice(1).toLowerCase()}
                   </Badge>
-                  <span className="font-medium">${order.total.toFixed(2)}</span>
+                  <span className="font-medium">₹{order.total.toFixed(2)}</span> {/* Changed $ to ₹ */}
                 </div>
               </div>
             </AccordionTrigger>
@@ -149,18 +172,15 @@ export default function AccountOrders() {
                           </p>
                           {item.customOptions && (
                             <p className="text-xs text-muted-foreground">
-                              {JSON.parse(item.customOptions)
-                                .filter(([key, value]: [string, any]) => value && key !== "specialInstructions")
-                                .map(([key, value]: [string, any]) => `${key}: ${value}`)
-                                .join(", ")}
+                              {renderCustomOptions(item.customOptions)}
                             </p>
                           )}
                         </div>
                         <div className="text-right">
                           <p className="text-sm">
-                            {item.quantity} x ${item.price.toFixed(2)}
+                            {item.quantity} x ₹{item.price.toFixed(2)} {/* Changed $ to ₹ */}
                           </p>
-                          <p className="font-medium">${(item.quantity * item.price).toFixed(2)}</p>
+                          <p className="font-medium">₹{(item.quantity * item.price).toFixed(2)}</p> {/* Changed $ to ₹ */}
                         </div>
                       </li>
                     ))}
@@ -169,15 +189,15 @@ export default function AccountOrders() {
                   <div className="mt-4 space-y-1">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
-                      <span>${order.subtotal.toFixed(2)}</span>
+                      <span>₹{order.subtotal.toFixed(2)}</span> {/* Changed $ to ₹ */}
                     </div>
                     <div className="flex justify-between">
                       <span>Delivery Fee</span>
-                      <span>${order.deliveryFee.toFixed(2)}</span>
+                      <span>₹{order.deliveryFee.toFixed(2)}</span> {/* Changed $ to ₹ */}
                     </div>
                     <div className="flex justify-between font-bold">
                       <span>Total</span>
-                      <span>${order.total.toFixed(2)}</span>
+                      <span>₹{order.total.toFixed(2)}</span> {/* Changed $ to ₹ */}
                     </div>
                   </div>
                 </CardContent>
@@ -189,4 +209,3 @@ export default function AccountOrders() {
     </div>
   )
 }
-

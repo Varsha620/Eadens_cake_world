@@ -149,7 +149,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   
       toast({
         title: "Order Submitted",
-        description: "Your order has been sent to the admin for approval",
+        description: `Your order of ₹${total.toFixed(2)} has been sent to the admin for approval`, // Changed $ to ₹
       });
       clearCart();
       return true;

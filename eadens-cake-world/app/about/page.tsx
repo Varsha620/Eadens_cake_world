@@ -198,7 +198,7 @@ export default function Home() {
               <div className="p-6">
                 <h3 className="mb-2 text-xl font-semibold text-[#4E0714]">{cake.name}</h3>
                 <p className="mb-4 text-[#781727]">{cake.description}</p>
-                <p className="text-xl font-bold text-[#AC5867]">${cake.price.toFixed(2)}</p>
+                <p className="text-xl font-bold text-[#AC5867]">₹{cake.price.toFixed(2)}</p> {/* Changed $ to ₹ */}
               </div>
             </Link>
           ))}

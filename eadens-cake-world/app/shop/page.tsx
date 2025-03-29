@@ -72,7 +72,7 @@ export default async function ShopPage({
             </CardHeader>
             <CardContent className="p-4 pt-0">
               <p className="text-sm text-muted-foreground">{product.description}</p>
-              <p className="mt-2 text-lg font-bold text-primary">${product.price.toFixed(2)}</p>
+              <p className="mt-2 text-lg font-bold text-primary">₹{product.price.toFixed(2)}</p> {/* Changed $ to ₹ */}
             </CardContent>
             <CardFooter className="p-4">
               <Button asChild className="w-full">

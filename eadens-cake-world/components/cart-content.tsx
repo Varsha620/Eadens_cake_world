@@ -64,7 +64,7 @@ export default function CartContent() {
                 <div className="flex flex-1 flex-col p-4">
                   <div className="flex justify-between">
                     <h3 className="font-semibold">{item.name}</h3>
-                    <p className="font-semibold">${(item.price * item.quantity).toFixed(2)}</p>
+                    <p className="font-semibold">₹{(item.price * item.quantity).toFixed(2)}</p> {/* Changed $ to ₹ */}
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {item.type === "custom" ? "Custom Cake" : "Standard Cake"}
@@ -125,15 +125,15 @@ export default function CartContent() {
           <CardContent className="space-y-4">
             <div className="flex justify-between">
               <span>Subtotal</span>
-              <span>${subtotal.toFixed(2)}</span>
+              <span>₹{subtotal.toFixed(2)}</span> {/* Changed $ to ₹ */}
             </div>
             <div className="flex justify-between">
               <span>Delivery Fee</span>
-              <span>${deliveryFee.toFixed(2)}</span>
+              <span>₹{deliveryFee.toFixed(2)}</span> {/* Changed $ to ₹ */}
             </div>
             <div className="flex justify-between font-bold">
               <span>Total</span>
-              <span>${total.toFixed(2)}</span>
+              <span>₹{total.toFixed(2)}</span> {/* Changed $ to ₹ */}
             </div>
 
             <div className="mt-6 space-y-4">
@@ -142,7 +142,7 @@ export default function CartContent() {
                 <RadioGroup value={deliveryMethod} onValueChange={setDeliveryMethod} className="space-y-2">
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="delivery" id="delivery" />
-                    <Label htmlFor="delivery">Home Delivery (+$5.99)</Label>
+                    <Label htmlFor="delivery">Home Delivery (+₹5.99)</Label> {/* Changed $ to ₹ */}
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="takeaway" id="takeaway" />

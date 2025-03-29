@@ -37,7 +37,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
 
         <div className="flex flex-col">
           <h1 className="mb-2 text-3xl font-bold">{product.name}</h1>
-          <p className="mb-4 text-2xl font-bold text-primary">${product.price.toFixed(2)}</p>
+          <p className="mb-4 text-2xl font-bold text-primary">₹{product.price.toFixed(2)}</p> {/* Changed $ to ₹ */}
           <p className="mb-6 text-muted-foreground">{product.longDescription || product.description}</p>
 
           {sizes.length > 0 && (
