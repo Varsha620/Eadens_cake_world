@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     const customCake = await prisma.customCake.create({
       data: {
-        userId: user?.id,
+        userId: user?.userId,
         flavor: data.flavor,
         filling: data.filling,
         frosting: data.frosting,
