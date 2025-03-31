@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -9,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
-import { ShoppingCart, Wand2 } from "lucide-react"
+import { ShoppingCart } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { useCart } from "@/components/cart-provider"
 
@@ -40,50 +39,11 @@ export default function CakeCustomizer() {
     specialInstructions: "",
   })
 
-  const [generatedImage, setGeneratedImage] = useState<string | null>(null)
-  const [isGenerating, setIsGenerating] = useState(false)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
   const [price, setPrice] = useState(35.99)
 
   const handleChange = (field: string, value: string) => {
     setCustomCake((prev) => ({ ...prev, [field]: value }))
-    // Reset generated image when options change
-    setGeneratedImage(null)
-  }
-
-  const generateCakeImage = async () => {
-    setIsGenerating(true)
-
-    try {
-      const response = await fetch("/api/custom-cakes/generate-image", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(customCake),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to generate image")
-      }
-
-      const data = await response.json()
-      setGeneratedImage(data.imageUrl)
-
-      toast({
-        title: "Image Generated",
-        description: "Your custom cake preview has been generated!",
-      })
-    } catch (error) {
-      console.error("Error generating image:", error)
-      toast({
-        title: "Generation Failed",
-        description: "Failed to generate cake image. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsGenerating(false)
-    }
   }
 
   const handleAddToCart = async () => {
@@ -98,7 +58,6 @@ export default function CakeCustomizer() {
         },
         body: JSON.stringify({
           ...customCake,
-          generatedImage,
         }),
       })
 
@@ -113,7 +72,7 @@ export default function CakeCustomizer() {
         id: `custom-${Date.now()}`,
         name: "Custom Cake",
         price: data.price,
-        image: generatedImage || "/placeholder.svg?height=400&width=400",
+        image: "/placeholder-cake.svg",
         type: "custom",
         customOptions: customCake,
       })
@@ -135,14 +94,15 @@ export default function CakeCustomizer() {
   }
 
   const calculatePrice = () => {
-    let calculatedPrice = 35.99 // Base price in ₹
-    if (customCake.size === "10 inch") calculatedPrice += 100
-    else if (customCake.size === "12 inch") calculatedPrice += 150
+    let calculatedPrice = 350.99 // Base price
+    if (customCake.size === "10 inch") calculatedPrice += 10
+    else if (customCake.size === "12 inch") calculatedPrice += 15
     else if (customCake.size === "Tiered (2 layers)") calculatedPrice += 25
     else if (customCake.size === "Tiered (3 layers)") calculatedPrice += 40
     if (["Red Velvet", "Carrot"].includes(customCake.flavor)) calculatedPrice += 5
     if (["Chocolate Ganache", "Caramel"].includes(customCake.filling)) calculatedPrice += 3
     if (customCake.frosting === "Fondant") calculatedPrice += 8
+    if (["Fresh Fruit", "Macarons", "Edible Flowers"].includes(customCake.decoration)) calculatedPrice += 7
 
     setPrice(calculatedPrice)
     return calculatedPrice
@@ -154,7 +114,7 @@ export default function CakeCustomizer() {
   }, [customCake])
 
   return (
-    <div className="grid gap-8 md:grid-cols-2">
+    <div className="grid gap-8">
       <Card>
         <CardContent className="p-6">
           <Tabs defaultValue="basics">
@@ -305,46 +265,26 @@ export default function CakeCustomizer() {
             </TabsContent>
           </Tabs>
 
-          <div className="mt-6">
-            <p className="mb-2 text-lg font-bold">Estimated Price: ${price.toFixed(2)}</p>
-            <p className="text-xs text-muted-foreground">
-              Final price may vary based on complexity and additional customizations
-            </p>
+          <div className="mt-8 flex flex-col items-center gap-4">
+            <div className="w-full text-center">
+              <p className="text-lg font-bold">Estimated Price: ₹{price.toFixed(2)}</p> {/* Changed $ to ₹ */}
+              <p className="text-sm text-muted-foreground">
+                Final price may vary based on complexity and additional customizations
+              </p>
+            </div>
+            
+            <Button 
+              onClick={handleAddToCart} 
+              disabled={isAddingToCart} 
+              size="lg" 
+              className="w-full max-w-xs gap-2"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {isAddingToCart ? "Adding to Cart..." : "Add to Cart"}
+            </Button>
           </div>
         </CardContent>
       </Card>
-
-      <div className="flex flex-col gap-6">
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center p-6">
-            {generatedImage ? (
-              <Image
-                src={generatedImage || "/placeholder.svg"}
-                alt="Custom cake preview"
-                width={400}
-                height={400}
-                className="rounded-lg"
-              />
-            ) : (
-              <div className="flex h-[400px] w-full flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center">
-                <p className="mb-4 text-muted-foreground">
-                  Customize your cake using the options on the left, then generate a preview
-                </p>
-                <Button onClick={generateCakeImage} disabled={isGenerating} className="gap-2">
-                  <Wand2 className="h-4 w-4" />
-                  {isGenerating ? "Generating..." : "Generate Preview"}
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Button onClick={handleAddToCart} disabled={isAddingToCart || !generatedImage} size="lg" className="gap-2">
-          <ShoppingCart className="h-5 w-5" />
-          {isAddingToCart ? "Adding to Cart..." : "Add to Cart"}
-        </Button>
-      </div>
     </div>
   )
 }
-
