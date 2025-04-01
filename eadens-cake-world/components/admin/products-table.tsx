@@ -1,13 +1,11 @@
 "use client"
 
-import type React from "react"
-
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
-import { Edit, Plus, Save, Trash } from "lucide-react"
+import { Edit, Plus, Save, Trash, Upload } from "lucide-react"
 
 type Product = {
   id: string
@@ -17,30 +15,22 @@ type Product = {
   category: string
   image: string
   isEditing?: boolean
+  imageFile?: File
 }
 
 export default function ProductsTable() {
   const { toast } = useToast()
   const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [editedProduct, setEditedProduct] = useState<Partial<Product>>({})
+  const [editedProduct, setEditedProduct] = useState<Partial<Product & { imageFile?: File }>>({})
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const fetchProducts = async () => {
     try {
       const response = await fetch("/api/products")
       
       if (!response.ok) {
-        let errorMessage = "Failed to fetch products"
-        try {
-          const errorData = await response.text()
-          if (errorData) {
-            const parsedError = JSON.parse(errorData)
-            errorMessage = parsedError.error || errorMessage
-          }
-        } catch (e) {
-          console.error("Error parsing error response:", e)
-        }
-        throw new Error(errorMessage)
+        throw new Error("Failed to fetch products")
       }
 
       const data = await response.json()
@@ -52,7 +42,7 @@ export default function ProductsTable() {
         description: error instanceof Error ? error.message : "Failed to load products",
         variant: "destructive",
       })
-      setProducts([]) // Clear products on error
+      setProducts([])
     } finally {
       setIsLoading(false)
     }
@@ -63,53 +53,80 @@ export default function ProductsTable() {
   }, [])
 
   const handleEdit = (id: string) => {
-    setProducts((prevProducts) =>
-      prevProducts.map((product) => (product.id === id ? { ...product, isEditing: true } : product)),
+    setProducts(prevProducts =>
+      prevProducts.map(product => 
+        product.id === id ? { ...product, isEditing: true } : product
+      )
     )
 
-    const productToEdit = products.find((product) => product.id === id)
+    const productToEdit = products.find(product => product.id === id)
     if (productToEdit) {
       setEditedProduct({ ...productToEdit })
     }
   }
 
+  const uploadToCloudinary = async (file: File): Promise<string> => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+  
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Upload failed');
+      }
+  
+      const result = await response.json();
+      return result.secure_url;
+    } catch (error) {
+      console.error('Upload error:', error);
+      throw new Error(
+        error instanceof Error 
+          ? error.message 
+          : 'Failed to upload image'
+      );
+    }
+  };
+
   const handleSave = async (id: string) => {
     try {
+      const formData = new FormData()
+      formData.append('name', editedProduct.name || '')
+      formData.append('description', editedProduct.description || '')
+      formData.append('price', String(editedProduct.price || 0))
+      formData.append('category', editedProduct.category || '')
+      formData.append('currentImage', editedProduct.image || '/placeholder.svg')
+      
+      if (editedProduct.imageFile) {
+        formData.append('image', editedProduct.imageFile)
+      }
+  
       const response = await fetch(`/api/products/${id}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: editedProduct.name,
-          description: editedProduct.description,
-          price: typeof editedProduct.price === "string" ? Number.parseFloat(editedProduct.price) : editedProduct.price,
-          category: editedProduct.category,
-        }),
+        body: formData,
       })
-
+  
       if (!response.ok) {
-        throw new Error("Failed to update product")
+        const errorText = await response.text()
+        throw new Error(errorText || "Failed to update product")
       }
-
-      setProducts((prevProducts) =>
-        prevProducts.map((product) =>
+  
+      const updatedProduct = await response.json()
+      
+      setProducts(prevProducts =>
+        prevProducts.map(product =>
           product.id === id
-            ? {
-                ...product,
-                ...editedProduct,
-                isEditing: false,
-                price:
-                  typeof editedProduct.price === "string"
-                    ? Number.parseFloat(editedProduct.price)
-                    : editedProduct.price || product.price,
-              }
-            : product,
-        ),
+            ? { ...updatedProduct, isEditing: false }
+            : product
+        )
       )
-
+      
       setEditedProduct({})
-
+      
       toast({
         title: "Product Updated",
         description: "The product has been updated successfully.",
@@ -118,7 +135,9 @@ export default function ProductsTable() {
       console.error("Error updating product:", error)
       toast({
         title: "Error",
-        description: "Failed to update product",
+        description: error instanceof Error 
+          ? error.message 
+          : "Failed to update product",
         variant: "destructive",
       })
     }
@@ -134,8 +153,7 @@ export default function ProductsTable() {
         throw new Error("Failed to delete product")
       }
 
-      setProducts((prevProducts) => prevProducts.filter((product) => product.id !== id))
-
+      setProducts(prevProducts => prevProducts.filter(product => product.id !== id))
       toast({
         title: "Product Deleted",
         description: "The product has been deleted successfully.",
@@ -145,7 +163,7 @@ export default function ProductsTable() {
       console.error("Error deleting product:", error)
       toast({
         title: "Error",
-        description: "Failed to delete product",
+        description: error instanceof Error ? error.message : "Failed to delete product",
         variant: "destructive",
       })
     }
@@ -153,50 +171,71 @@ export default function ProductsTable() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setEditedProduct((prev) => ({ ...prev, [name]: value }))
+    setEditedProduct(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0]
+      const reader = new FileReader()
+      
+      reader.onload = (event) => {
+        setEditedProduct(prev => ({
+          ...prev,
+          image: event.target?.result as string,
+          imageFile: file
+        }))
+      }
+      
+      reader.readAsDataURL(file)
+    }
   }
 
   const handleAddNew = async () => {
     try {
-      const newProduct = {
-        name: "New Product",
-        description: "Product description",
-        price: 29.99,
-        category: "other",
-        image: "/placeholder.svg?height=100&width=100",
-      }
-
+      setIsLoading(true);
+  
+      // Create FormData instead of JSON
+      const formData = new FormData();
+      formData.append('name', 'New Product');
+      formData.append('description', 'Product description');
+      formData.append('price', '29.99');
+      formData.append('category', 'other');
+      // Add empty file placeholder if needed
+      formData.append('image', new Blob(), 'placeholder.png');
+  
       const response = await fetch("/api/products", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newProduct),
-      })
-
+        body: formData, // No Content-Type header needed for FormData
+      });
+  
       if (!response.ok) {
-        throw new Error("Failed to create product")
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to create product");
       }
-
-      const createdProduct = await response.json()
-
-      setProducts((prevProducts) => [...prevProducts, { ...createdProduct, isEditing: true }])
-
-      setEditedProduct(createdProduct)
-
+  
+      const createdProduct = await response.json();
+      setProducts(prev => [...prev, { ...createdProduct, isEditing: true }]);
+      setEditedProduct(createdProduct);
+      
       toast({
-        title: "New Product Added",
-        description: "Edit the details of the new product.",
-      })
+        title: "Success",
+        description: "New product created. Please update its details.",
+      });
+  
     } catch (error) {
-      console.error("Error creating product:", error)
+      console.error("Error creating product:", error);
       toast({
         title: "Error",
-        description: "Failed to create product",
+        description: error instanceof Error 
+          ? error.message 
+          : "Failed to create product",
         variant: "destructive",
-      })
+      });
+    } finally {
+      setIsLoading(false);
     }
-  }
+  };
 
   if (isLoading) {
     return <p className="text-center">Loading products...</p>
@@ -218,7 +257,7 @@ export default function ProductsTable() {
               <th className="px-4 py-2 text-left font-medium">Image</th>
               <th className="px-4 py-2 text-left font-medium">Name</th>
               <th className="px-4 py-2 text-left font-medium">Description</th>
-              <th className="px-4 py-2 text-left font-medium">Price</th>
+              <th className="px-4 py-2 text-left font-medium">Price (₹)</th>
               <th className="px-4 py-2 text-left font-medium">Category</th>
               <th className="px-4 py-2 text-left font-medium">Actions</th>
             </tr>
@@ -227,17 +266,50 @@ export default function ProductsTable() {
             {products.map((product) => (
               <tr key={product.id} className="border-b">
                 <td className="px-4 py-2">
-                  <Image
-                    src={product.image || "/placeholder.svg"}
-                    alt={product.name}
-                    width={50}
-                    height={50}
-                    className="rounded-md"
-                  />
+                  {product.isEditing ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <Image
+                        src={editedProduct.image || product.image || "/placeholder.svg"}
+                        alt={product.name}
+                        width={80}
+                        height={80}
+                        className="rounded-md object-cover"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Upload className="h-4 w-4" />
+                        Change
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="hidden"
+                        />
+                      </Button>
+                    </div>
+                  ) : (
+                    <Image
+                      src={product.image || "/placeholder.svg"}
+                      alt={product.name}
+                      width={80}
+                      height={80}
+                      className="rounded-md object-cover"
+                    />
+                  )}
                 </td>
                 <td className="px-4 py-2">
                   {product.isEditing ? (
-                    <Input name="name" value={editedProduct.name || ""} onChange={handleChange} className="w-full" />
+                    <Input
+                      name="name"
+                      value={editedProduct.name || ""}
+                      onChange={handleChange}
+                      className="w-full"
+                    />
                   ) : (
                     product.name
                   )}
@@ -265,7 +337,7 @@ export default function ProductsTable() {
                       className="w-24"
                     />
                   ) : (
-                    `₹${product.price.toFixed(2)}` // Changed $ to ₹
+                    `₹${product.price.toFixed(2)}`
                   )}
                 </td>
                 <td className="px-4 py-2">
@@ -280,25 +352,28 @@ export default function ProductsTable() {
                     product.category
                   )}
                 </td>
-                <td className="px-4 py-2">
+                <td className="px-4 py-2 space-x-2">
                   {product.isEditing ? (
-                    <Button size="sm" variant="outline" className="mr-2 gap-1" onClick={() => handleSave(product.id)}>
-                      <Save className="h-4 w-4" />
+                    <Button size="sm" onClick={() => handleSave(product.id)}>
+                      <Save className="h-4 w-4 mr-2" />
                       Save
                     </Button>
                   ) : (
-                    <Button size="sm" variant="outline" className="mr-2 gap-1" onClick={() => handleEdit(product.id)}>
-                      <Edit className="h-4 w-4" />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEdit(product.id)}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
                       Edit
                     </Button>
                   )}
                   <Button
                     size="sm"
-                    variant="outline"
-                    className="gap-1 text-red-500"
+                    variant="destructive"
                     onClick={() => handleDelete(product.id)}
                   >
-                    <Trash className="h-4 w-4" />
+                    <Trash className="h-4 w-4 mr-2" />
                     Delete
                   </Button>
                 </td>
