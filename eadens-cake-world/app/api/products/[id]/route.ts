@@ -78,7 +78,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
           cloudinary.uploader.upload_stream(
             { 
               folder: "products",
-              upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET,
+              upload_preset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
               resource_type: "auto"
             },
             (error, result) => {
