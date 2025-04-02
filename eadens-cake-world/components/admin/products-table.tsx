@@ -147,27 +147,42 @@ export default function ProductsTable() {
     try {
       const response = await fetch(`/api/products/${id}`, {
         method: "DELETE",
-      })
-
+      });
+  
       if (!response.ok) {
-        throw new Error("Failed to delete product")
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.message || 
+          errorData.error || 
+          "Failed to delete product"
+        );
       }
-
-      setProducts(prevProducts => prevProducts.filter(product => product.id !== id))
+  
+      // Optimistic update - remove from state immediately
+      setProducts(prevProducts => 
+        prevProducts.filter(product => product.id !== id)
+      );
+  
       toast({
-        title: "Product Deleted",
-        description: "The product has been deleted successfully.",
-        variant: "destructive",
-      })
+        title: "Success",
+        description: "Product deleted successfully",
+      });
+  
     } catch (error) {
-      console.error("Error deleting product:", error)
+      console.error("Delete error:", error);
+      
+      // Re-fetch products to ensure sync with server
+      fetchProducts();
+      
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete product",
+        description: error instanceof Error 
+          ? error.message 
+          : "Failed to delete product",
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
