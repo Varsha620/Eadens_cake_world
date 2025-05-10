@@ -4,12 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "run-p dev:prisma dev:next",
-    "build": "prisma generate && prisma migrate deploy && next build",
+    "build": "prisma generate --schema ./eadens-cake-world/prisma/schema.prisma && prisma migrate deploy --schema ./eadens-cake-world/prisma/schema.prisma && next build",
     "start": "next start",
     "lint": "next lint",
-    "dev:prisma": "prisma generate && prisma migrate dev",
-    "dev:next": "next dev",
-    "postinstall": "prisma generate"
+    "dev:prisma": "prisma generate --schema ./eadens-cake-world/prisma/schema.prisma && prisma migrate dev --schema ./eadens-cake-world/prisma/schema.prisma",
+    "dev:next": "cd eadens-cake-world && next dev",
+    "postinstall": "prisma generate --schema ./eadens-cake-world/prisma/schema.prisma"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
