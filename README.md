@@ -9,7 +9,7 @@ Welcome to **Eadens Cake World** — a modern full-stack web application built f
 - **Backend:** Node.js, Prisma ORM
 - **Database:** (assumed from Prisma) —SQLite
 - **Package Management:** pnpm
-- **Deployment:** (to be added, e.g., Vercel / Netlify)
+- **Deployment:** (not yet)
 
 ## 📂 Project Structure
 
